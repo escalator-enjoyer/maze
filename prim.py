@@ -6,6 +6,8 @@ WIDTH, HEIGHT = 800, 600
 FPS_DISPLAY = 120
 FPS_MOVEMENT = 30
 
+dijkstra_slowness = 2 # 1.7 is like very difficult and 1.5 is impossible, 2 is beatable
+
 grid_width, grid_height = 40, 30
 cell_size = 20
 max_history_length = 10
@@ -111,7 +113,7 @@ class DijkstraPlayer:
 
   def update(self, maze, dt, end_position):
     self.move_timer += dt
-    if self.move_timer >= 1000 / FPS_MOVEMENT * 2:
+    if self.move_timer >= 1000 / FPS_MOVEMENT * dijkstra_slowness:
       if not self.path:
         self.find_path(maze, (self.x, self.y), end_position)
 
