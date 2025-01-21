@@ -6,11 +6,12 @@ WIDTH, HEIGHT = 800, 600
 FPS_DISPLAY = 120
 FPS_MOVEMENT = 30
 
-dijkstra_slowness = 2 # 1.7 is like very difficult and 1.5 is impossible, 2 is beatable
+# 1 is how fast it would be with the player's movement
+dijkstra_slowness = 2 # 1.7 is like very difficult and <1.6 is impossible, 2 is beatable
 
 grid_width, grid_height = 40, 30
 cell_size = 20
-max_history_length = 10
+max_history_length = 15
 
 colors = {
   'black': (20, 20, 20),
