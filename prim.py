@@ -13,6 +13,9 @@ grid_width, grid_height = 40, 30
 cell_size = 20
 max_history_length = 15
 
+offset_x = (WIDTH - grid_width * cell_size) // 2
+offset_y = (HEIGHT - grid_height * cell_size) // 2
+
 colors = {
   'black': (20, 20, 20),
   'white': (230, 230, 230),
@@ -23,7 +26,7 @@ colors = {
 }
 
 pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 pygame.display.set_caption("Maze RNG")
 clock = pygame.time.Clock()
 
@@ -67,7 +70,7 @@ class Player:
   def draw(self, surface):
     pygame.draw.rect(
       surface, colors['pink'],
-      (self.x * cell_size, self.y * cell_size, cell_size, cell_size)
+      (self.x * cell_size + offset_x, self.y * cell_size + offset_y, cell_size, cell_size)
     )
   
   def draw_trail(self, surface):
@@ -75,7 +78,7 @@ class Player:
       darker_pink = tuple(max(0, int(c * 0.6)) for c in colors['pink'])
       pygame.draw.rect(
         surface, darker_pink,
-        (hx * cell_size, hy * cell_size, cell_size, cell_size)
+        (hx * cell_size + offset_x, hy * cell_size + offset_y, cell_size, cell_size)
       )
 
 class DijkstraPlayer:
@@ -136,7 +139,7 @@ class DijkstraPlayer:
   def draw(self, surface):
     pygame.draw.rect(
       surface, colors['orange'],
-      (self.x * cell_size, self.y * cell_size, cell_size, cell_size)
+      (self.x * cell_size + offset_x, self.y * cell_size + offset_y, cell_size, cell_size)
     )
   
   def draw_trail(self, surface):
@@ -144,7 +147,7 @@ class DijkstraPlayer:
       darker_orange = tuple(max(0, int(c * 0.6)) for c in colors['orange'])
       pygame.draw.rect(
         surface, darker_orange,
-        (hx * cell_size, hy * cell_size, cell_size, cell_size)
+        (hx * cell_size + offset_x, hy * cell_size + offset_y, cell_size, cell_size)
       )
 
 def create_maze():
@@ -192,13 +195,14 @@ def draw_maze(maze, end_position=None):
     for x in range(grid_width):
       color = colors['gray'] if maze[y][x] == 0 else colors['black']
       pygame.draw.rect(
-        screen, color, (x * cell_size, y * cell_size, cell_size, cell_size)
+         screen, color, 
+        (x * cell_size + offset_x, y * cell_size + offset_y, cell_size, cell_size)
       )
   if end_position:
     ex, ey = end_position
     pygame.draw.rect(
       screen, colors['green'],
-      (ex * cell_size, ey * cell_size, cell_size, cell_size)
+      (ex * cell_size + offset_x, ey * cell_size + offset_y, cell_size, cell_size)
     )
 
 def main():
@@ -206,6 +210,7 @@ def main():
   player = Player(*start_position)
   dijkstra_player = DijkstraPlayer(*start_position)
 
+  global screen, WIDTH, HEIGHT, offset_x, offset_y
   running = True
   game_over = False
   while running:
@@ -218,6 +223,11 @@ def main():
         player = Player(*start_position)
         dijkstra_player = DijkstraPlayer(*start_position)
         game_over = False
+      if event.type == pygame.VIDEORESIZE:
+        WIDTH, HEIGHT = event.size
+        offset_x = (WIDTH - grid_width * cell_size) // 2
+        offset_y = (HEIGHT - grid_height * cell_size) // 2
+        screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 
     if not game_over:
       game_over = player.update(maze, dt, end_position)
