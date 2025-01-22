@@ -94,6 +94,7 @@ class DijkstraPlayer:
     distances = {start: 0}
     previous = {start: None}
     directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]
+    visited = []
 
     while heap:
       current_distance, current_position = heapq.heappop(heap)
@@ -109,12 +110,30 @@ class DijkstraPlayer:
             priority = distance
             heapq.heappush(heap, (priority, neighbor))
             previous[neighbor] = current_position
+      
+      draw_maze(maze, end)
+      visited.append(current_position)
+      dark_orange = tuple(max(0, int(c * 0.3)) for c in colors['orange'])
+      for thing in visited:
+        pygame.draw.rect(
+          screen, dark_orange,
+          (thing[0] * cell_size + offset_x, thing[1] * cell_size + offset_y, cell_size, cell_size)
+        )
+      pygame.display.flip()
+      clock.tick(FPS_MOVEMENT)
 
     path = []
     step = end
     while step:
       path.append(step)
       step = previous[step]
+      for thing in path:
+        pygame.draw.rect(
+          screen, colors['orange'],
+          (thing[0] * cell_size + offset_x, thing[1] * cell_size + offset_y, cell_size, cell_size)
+        )
+      pygame.display.flip()
+      clock.tick(FPS_MOVEMENT)
     path.reverse()
     self.path = path
 
@@ -213,6 +232,10 @@ def main():
   global screen, WIDTH, HEIGHT, offset_x, offset_y
   running = True
   game_over = False
+  
+  pygame.display.flip()
+  draw_maze(maze, end_position)
+  dijkstra_player.find_path(maze, start_position, end_position)
   while running:
     dt = clock.tick(FPS_DISPLAY)
     for event in pygame.event.get():
@@ -250,4 +273,5 @@ def main():
   pygame.quit()
 
 if __name__ == "__main__":
+  pygame.display.flip()
   main()
