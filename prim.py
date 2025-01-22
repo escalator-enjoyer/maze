@@ -2,19 +2,21 @@ import pygame
 import random
 import heapq
 
-WIDTH, HEIGHT = 800, 600
+width, height = 800, 600
 FPS_DISPLAY = 120
 FPS_MOVEMENT = 30
 
 # 1 is how fast it would be with the player's movement
 dijkstra_slowness = 1.8 # 1.7 is like very difficult and <1.6 is impossible, 2 is beatable
 
+visualize_dijkstra = False
+
 grid_width, grid_height = 40, 30
 cell_size = 20
 max_history_length = 15
 
-offset_x = (WIDTH - grid_width * cell_size) // 2
-offset_y = (HEIGHT - grid_height * cell_size) // 2
+offset_x = (width - grid_width * cell_size) // 2
+offset_y = (height - grid_height * cell_size) // 2
 
 colors = {
   'black': (20, 20, 20),
@@ -26,7 +28,7 @@ colors = {
 }
 
 pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 pygame.display.set_caption("Maze RNG")
 clock = pygame.time.Clock()
 
@@ -111,29 +113,31 @@ class DijkstraPlayer:
             heapq.heappush(heap, (priority, neighbor))
             previous[neighbor] = current_position
       
-      draw_maze(maze, end)
-      visited.append(current_position)
-      dark_orange = tuple(max(0, int(c * 0.3)) for c in colors['orange'])
-      for thing in visited:
-        pygame.draw.rect(
-          screen, dark_orange,
-          (thing[0] * cell_size + offset_x, thing[1] * cell_size + offset_y, cell_size, cell_size)
-        )
-      pygame.display.flip()
-      clock.tick(FPS_MOVEMENT)
+      if visualize_dijkstra:
+        draw_maze(maze, end)
+        visited.append(current_position)
+        dark_orange = tuple(max(0, int(c * 0.3)) for c in colors['orange'])
+        for thing in visited:
+          pygame.draw.rect(
+            screen, dark_orange,
+            (thing[0] * cell_size + offset_x, thing[1] * cell_size + offset_y, cell_size, cell_size)
+          )
+        pygame.display.flip()
+        clock.tick(FPS_MOVEMENT)
 
     path = []
     step = end
     while step:
       path.append(step)
       step = previous[step]
-      for thing in path:
-        pygame.draw.rect(
-          screen, colors['orange'],
-          (thing[0] * cell_size + offset_x, thing[1] * cell_size + offset_y, cell_size, cell_size)
-        )
-      pygame.display.flip()
-      clock.tick(FPS_MOVEMENT)
+      if visualize_dijkstra:
+        for thing in path:
+          pygame.draw.rect(
+            screen, colors['orange'],
+            (thing[0] * cell_size + offset_x, thing[1] * cell_size + offset_y, cell_size, cell_size)
+          )
+        pygame.display.flip()
+        clock.tick(FPS_MOVEMENT)
     path.reverse()
     self.path = path
 
@@ -229,13 +233,10 @@ def main():
   player = Player(*start_position)
   dijkstra_player = DijkstraPlayer(*start_position)
 
-  global screen, WIDTH, HEIGHT, offset_x, offset_y
-  running = True
+  global screen, width, height, offset_x, offset_y
   game_over = False
+  running = True
   
-  pygame.display.flip()
-  draw_maze(maze, end_position)
-  dijkstra_player.find_path(maze, start_position, end_position)
   while running:
     dt = clock.tick(FPS_DISPLAY)
     for event in pygame.event.get():
@@ -247,10 +248,10 @@ def main():
         dijkstra_player = DijkstraPlayer(*start_position)
         game_over = False
       if event.type == pygame.VIDEORESIZE:
-        WIDTH, HEIGHT = event.size
-        offset_x = (WIDTH - grid_width * cell_size) // 2
-        offset_y = (HEIGHT - grid_height * cell_size) // 2
-        screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
+        width, height = event.size
+        offset_x = (width - grid_width * cell_size) // 2
+        offset_y = (height - grid_height * cell_size) // 2
+        screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 
     if not game_over:
       game_over = player.update(maze, dt, end_position)
@@ -266,12 +267,11 @@ def main():
     if game_over:
       font = pygame.font.Font(None, 74)
       text = font.render("R to Restart", True, colors['white'])
-      screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - text.get_height() // 2))
+      screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2))
 
     pygame.display.flip()
 
   pygame.quit()
 
 if __name__ == "__main__":
-  pygame.display.flip()
   main()
