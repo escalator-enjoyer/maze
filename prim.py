@@ -2,14 +2,19 @@ import pygame
 import random
 import heapq
 
-width, height = 800, 600
+width, height = 1000, 750
 FPS_DISPLAY = 120
 FPS_MOVEMENT = 30
 
 # 1 is how fast it would be with the player's movement
-dijkstra_slowness = 1.8 # 1.7 is like very difficult and <1.6 is impossible, 2 is beatable
+dijkstra_slowness = 1.8 # 1.7 is like very difficult and <1.6 is basically impossible, 2 is beatable
 
 visualize_dijkstra = False
+path_pause = 1
+
+running = False
+game_over = False
+player_moved = False
 
 grid_width, grid_height = 40, 30
 cell_size = 20
@@ -41,8 +46,10 @@ class Player:
     self.moved = moved
 
   def move(self, dx, dy, maze):
-    if not self.moved:
+    global player_moved
+    if not self.moved or not player_moved:
       self.moved = True
+      player_moved = True
     if 0 <= self.x + dx < grid_width and 0 <= self.y + dy < grid_height:
       if not maze[self.y + dy][self.x + dx]:
         self.history.append((self.x, self.y))
@@ -113,9 +120,9 @@ class DijkstraPlayer:
             heapq.heappush(heap, (priority, neighbor))
             previous[neighbor] = current_position
       
+      visited.append(current_position)
       if visualize_dijkstra:
         draw_maze(maze, end)
-        visited.append(current_position)
         dark_orange = tuple(max(0, int(c * 0.3)) for c in colors['orange'])
         for thing in visited:
           pygame.draw.rect(
@@ -123,7 +130,8 @@ class DijkstraPlayer:
             (thing[0] * cell_size + offset_x, thing[1] * cell_size + offset_y, cell_size, cell_size)
           )
         pygame.display.flip()
-        clock.tick(FPS_MOVEMENT)
+        process_inputs()
+        clock.tick(FPS_MOVEMENT * 2)
 
     path = []
     step = end
@@ -137,7 +145,12 @@ class DijkstraPlayer:
             (thing[0] * cell_size + offset_x, thing[1] * cell_size + offset_y, cell_size, cell_size)
           )
         pygame.display.flip()
-        clock.tick(FPS_MOVEMENT)
+        process_inputs()
+        clock.tick(FPS_MOVEMENT * 2)
+    if visualize_dijkstra:
+      for x in range(path_pause):
+        process_inputs()
+        clock.tick(1/path_pause)
     path.reverse()
     self.path = path
 
@@ -206,6 +219,7 @@ def create_maze():
 
       draw_maze(maze)
       pygame.display.flip()
+      process_inputs()
       clock.tick(FPS_DISPLAY)
 
   end_x, end_y = random.choice(list(visited))
@@ -228,25 +242,43 @@ def draw_maze(maze, end_position=None):
       (ex * cell_size + offset_x, ey * cell_size + offset_y, cell_size, cell_size)
     )
 
+def process_inputs():
+  global screen, width, height, offset_x, offset_y, visualize_dijkstra, running, game_over, player_moved
+  for event in pygame.event.get():
+      if event.type == pygame.QUIT:
+        pygame.quit()
+      if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_v and (game_over or not player_moved):
+          visualize_dijkstra = not visualize_dijkstra
+      if event.type == pygame.VIDEORESIZE:
+        width, height = event.size
+        offset_x = (width - grid_width * cell_size) // 2
+        offset_y = (height - grid_height * cell_size) // 2
+        screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+
 def main():
   maze, start_position, end_position = create_maze()
   player = Player(*start_position)
   dijkstra_player = DijkstraPlayer(*start_position)
 
-  global screen, width, height, offset_x, offset_y
+  global screen, width, height, offset_x, offset_y, visualize_dijkstra, running, game_over, player_moved
+  
   game_over = False
   running = True
-  
+  player_moved = False
   while running:
     dt = clock.tick(FPS_DISPLAY)
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         running = False
-      if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
-        maze, start_position, end_position = create_maze()
-        player = Player(*start_position)
-        dijkstra_player = DijkstraPlayer(*start_position)
-        game_over = False
+      if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_r:
+          maze, start_position, end_position = create_maze()
+          player = Player(*start_position)
+          dijkstra_player = DijkstraPlayer(*start_position)
+          game_over = False
+        elif event.key == pygame.K_v:
+          visualize_dijkstra = not visualize_dijkstra
       if event.type == pygame.VIDEORESIZE:
         width, height = event.size
         offset_x = (width - grid_width * cell_size) // 2
@@ -256,6 +288,9 @@ def main():
     if not game_over:
       game_over = player.update(maze, dt, end_position)
       if player.moved:
+        if visualize_dijkstra:
+          dijkstra_player.find_path(maze, start_position, end_position)
+          visualize_dijkstra = False
         dijkstra_player.update(maze, dt, end_position)
 
     draw_maze(maze, end_position)
