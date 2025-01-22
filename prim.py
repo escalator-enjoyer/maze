@@ -7,7 +7,7 @@ FPS_DISPLAY = 120
 FPS_MOVEMENT = 30
 
 # 1 is how fast it would be with the player's movement
-dijkstra_slowness = 2 # 1.7 is like very difficult and <1.6 is impossible, 2 is beatable
+dijkstra_slowness = 1.8 # 1.7 is like very difficult and <1.6 is impossible, 2 is beatable
 
 grid_width, grid_height = 40, 30
 cell_size = 20
@@ -28,13 +28,16 @@ pygame.display.set_caption("Maze RNG")
 clock = pygame.time.Clock()
 
 class Player:
-  def __init__(self, x, y):
+  def __init__(self, x, y, moved=False):
     self.x = x
     self.y = y
     self.move_timer = 0
     self.history = []
+    self.moved = moved
 
   def move(self, dx, dy, maze):
+    if not self.moved:
+      self.moved = True
     if 0 <= self.x + dx < grid_width and 0 <= self.y + dy < grid_height:
       if not maze[self.y + dy][self.x + dx]:
         self.history.append((self.x, self.y))
@@ -218,7 +221,8 @@ def main():
 
     if not game_over:
       game_over = player.update(maze, dt, end_position)
-      dijkstra_player.update(maze, dt, end_position)
+      if player.moved:
+        dijkstra_player.update(maze, dt, end_position)
 
     draw_maze(maze, end_position)
     player.draw_trail(screen)
