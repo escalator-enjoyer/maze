@@ -6,6 +6,8 @@ width, height = 1000, 750
 FPS_DISPLAY = 120
 FPS_MOVEMENT = 30
 
+dijkstra_plays = True
+
 # 1 is how fast it would be with the player's movement
 dijkstra_slowness = 1.8 # 1.7 is like very difficult and <1.6 is basically impossible, 2 is beatable
 
@@ -290,6 +292,10 @@ def main():
           player = Player(*start_position)
           dijkstra_player = DijkstraPlayer(*start_position)
           game_over = False
+        elif event.key == pygame.K_e:
+          player = Player(*start_position)
+          dijkstra_player = DijkstraPlayer(*start_position)
+          game_over = False
         elif event.key == pygame.K_v:
           visualize_dijkstra = not visualize_dijkstra
         elif event.key == pygame.K_t:
@@ -302,26 +308,26 @@ def main():
 
     if not game_over:
       if visualize_dijkstra:
-        dijkstra_player.path = dijkstra_player.find_path(maze, start_position, end_position)
+        dijkstra_player.path = dijkstra_player.find_path(maze, (player.x, player.y), end_position)
         visualize_dijkstra = False
       game_over = player.update(maze, dt, end_position)
-      if player.moved:
+      if player.moved and dijkstra_plays:
         dijkstra_player.update(maze, dt, end_position)
     
 
     draw_maze(maze, end_position)
     if show_path:
-      if not dijkstra_player.path2:
-        dijkstra_player.path2 = dijkstra_player.find_path(maze, (player.x, player.y), end_position)
+      dijkstra_player.path2 = dijkstra_player.find_path(maze, (player.x, player.y), end_position)
       dijkstra_player.draw_path()
     player.draw_trail(screen)
-    dijkstra_player.draw_trail(screen)
-    dijkstra_player.draw(screen)
+    if dijkstra_plays:
+      dijkstra_player.draw_trail(screen)
+      dijkstra_player.draw(screen)
     player.draw(screen)
 
     if game_over:
       font = pygame.font.Font(None, 74)
-      text = font.render("R to Restart", True, colors['white'])
+      text = font.render("R to regenerate, E to restart", True, colors['white'])
       screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2))
       show_path = False
       visualize_dijkstra = False
