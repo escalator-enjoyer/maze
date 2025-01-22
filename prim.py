@@ -95,6 +95,7 @@ class DijkstraPlayer:
     self.x = x
     self.y = y
     self.path = []
+    self.path2 = []
     self.history = []
     self.move_timer = 0
 
@@ -152,13 +153,24 @@ class DijkstraPlayer:
         process_inputs()
         clock.tick(1/path_pause)
     path.reverse()
-    self.path = path
+    return path
+  
+  def draw_path(self):
+    if not self.path2:
+      return
+    
+    dark_green = tuple(max(0, int(c * 0.25)) for c in colors['green'])
+    for x, y in self.path2[0:-1]:
+      pygame.draw.rect(
+        screen, dark_green,
+        (x * cell_size + offset_x, y * cell_size + offset_y, cell_size, cell_size)
+      )
 
   def update(self, maze, dt, end_position):
     self.move_timer += dt
     if self.move_timer >= 1000 / FPS_MOVEMENT * dijkstra_slowness:
       if not self.path:
-        self.find_path(maze, (self.x, self.y), end_position)
+        self.path = self.find_path(maze, (self.x, self.y), end_position)
 
       if self.path:
         next_step = self.path.pop(0)
@@ -266,6 +278,7 @@ def main():
   game_over = False
   running = True
   player_moved = False
+  show_path = False
   while running:
     dt = clock.tick(FPS_DISPLAY)
     for event in pygame.event.get():
@@ -279,6 +292,8 @@ def main():
           game_over = False
         elif event.key == pygame.K_v:
           visualize_dijkstra = not visualize_dijkstra
+        elif event.key == pygame.K_t:
+          show_path = not show_path
       if event.type == pygame.VIDEORESIZE:
         width, height = event.size
         offset_x = (width - grid_width * cell_size) // 2
@@ -286,14 +301,19 @@ def main():
         screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 
     if not game_over:
+      if visualize_dijkstra:
+        dijkstra_player.path = dijkstra_player.find_path(maze, start_position, end_position)
+        visualize_dijkstra = False
       game_over = player.update(maze, dt, end_position)
       if player.moved:
-        if visualize_dijkstra:
-          dijkstra_player.find_path(maze, start_position, end_position)
-          visualize_dijkstra = False
         dijkstra_player.update(maze, dt, end_position)
+    
 
     draw_maze(maze, end_position)
+    if show_path:
+      if not dijkstra_player.path2:
+        dijkstra_player.path2 = dijkstra_player.find_path(maze, (player.x, player.y), end_position)
+      dijkstra_player.draw_path()
     player.draw_trail(screen)
     dijkstra_player.draw_trail(screen)
     dijkstra_player.draw(screen)
@@ -303,6 +323,8 @@ def main():
       font = pygame.font.Font(None, 74)
       text = font.render("R to Restart", True, colors['white'])
       screen.blit(text, (width // 2 - text.get_width() // 2, height // 2 - text.get_height() // 2))
+      show_path = False
+      visualize_dijkstra = False
 
     pygame.display.flip()
 
