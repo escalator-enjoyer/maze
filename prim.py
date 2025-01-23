@@ -257,13 +257,15 @@ def draw_maze(maze, end_position=None):
     )
 
 def process_inputs():
-  global screen, width, height, offset_x, offset_y, visualize_dijkstra, running, game_over, player_moved
+  global screen, width, height, offset_x, offset_y, visualize_dijkstra, running, game_over, player_moved, dijkstra_plays
   for event in pygame.event.get():
       if event.type == pygame.QUIT:
         pygame.quit()
       if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_v and (game_over or not player_moved):
           visualize_dijkstra = not visualize_dijkstra
+        elif event.key == pygame.K_f:
+          dijkstra_plays = not dijkstra_plays
       if event.type == pygame.VIDEORESIZE:
         width, height = event.size
         offset_x = (width - grid_width * cell_size) // 2
@@ -275,7 +277,7 @@ def main():
   player = Player(*start_position)
   dijkstra_player = DijkstraPlayer(*start_position)
 
-  global screen, width, height, offset_x, offset_y, visualize_dijkstra, running, game_over, player_moved
+  global screen, width, height, offset_x, offset_y, visualize_dijkstra, running, game_over, player_moved, dijkstra_plays
   
   game_over = False
   running = True
@@ -298,6 +300,8 @@ def main():
           game_over = False
         elif event.key == pygame.K_v:
           visualize_dijkstra = not visualize_dijkstra
+        elif event.key == pygame.K_f:
+          dijkstra_plays = not dijkstra_plays
         elif event.key == pygame.K_t:
           show_path = not show_path
       if event.type == pygame.VIDEORESIZE:
