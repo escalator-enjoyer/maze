@@ -6,6 +6,8 @@
 
  R - Regenerate
 
+ F - Toggle dijkstra player (orange)
+
  V - Visualize the dijkstra's algorithm (slightly broken at the moment, only use before moving)
 
  T - Show correct path
